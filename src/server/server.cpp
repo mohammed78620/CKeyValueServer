@@ -140,10 +140,7 @@ enum {
     RES_NX = 2,
 };
 
-// The data structure for the key space. This is just a placeholder
-// until we implement a hashtable in the next chapter.
-// static std::map<std::string, std::string> g_map;
-// initialise hashmap
+
 ht_hash_table* ht = ht_new();
 
 static uint32_t do_get(
@@ -161,14 +158,6 @@ static uint32_t do_get(
     memcpy(res, val.data(), val.size());
     *reslen = (uint32_t)val.size();
     return RES_OK;
-    // if (!g_map.count(cmd[1])) {
-    //     return RES_NX;
-    // }
-    // std::string &val = g_map[cmd[1]];
-    // assert(val.size() <= k_max_msg);
-    // memcpy(res, val.data(), val.size());
-    // *reslen = (uint32_t)val.size();
-    // return RES_OK;
 }
 
 static uint32_t do_set(
@@ -177,7 +166,6 @@ static uint32_t do_set(
     (void)res;
     (void)reslen;
     ht_insert(ht, cmd[1].c_str(), cmd[2].c_str());
-    // g_map[cmd[1]] = cmd[2];
     return RES_OK;
 }
 
@@ -187,7 +175,6 @@ static uint32_t do_del(
     (void)res;
     (void)reslen;
     ht_delete(ht, cmd[1].c_str());
-    // g_map.erase(cmd[1]);
     return RES_OK;
 }
 
