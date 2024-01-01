@@ -42,3 +42,9 @@ This C++ project implements a server-client application facilitating data manipu
 - **include/**: Header files.
 - **lib/**: Libraries if needed.
 - **bin/**: Executable files.
+
+## TODO
+
+- potential memory leak from not freeing hash_table instance when stopping server
+- write some test cases
+- convert to pure c implementation be swapping vector arrays with dynamic c arrays and revert malloc and calloc.
