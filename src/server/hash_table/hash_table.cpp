@@ -150,8 +150,10 @@ char* ht_search(ht_hash_table* ht, const char* key) {
     ht_item* item = ht->items[index];
     int i = 1;
     while (item != NULL) {
-        if (strcmp(item->key, key) == 0) {
-            return item->value;
+        if (item != &HT_DELETED_ITEM) { 
+            if (strcmp(item->key, key) == 0) {
+                return item->value;
+            }
         }
         index = ht_get_hash(key, ht->size, i);
         item = ht->items[index];
