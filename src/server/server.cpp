@@ -340,7 +340,52 @@ static void connection_io(Conn *conn) {
     }
 }
 
-int main() {
+void populate_hash_map_from_file(const char *filename, ht_hash_table *ht) {
+    FILE *file = fopen(filename, "r");
+    if (file == NULL) {
+        printf("File doesn't exist. Creating a new file.\n");
+        file = fopen(filename, "w"); // Create the file if it doesn't exist
+        if (file == NULL) {
+            printf("Error creating the file.\n");
+            return;
+        }
+        fclose(file);
+        return;
+    }
+
+    char line[(k_max_msg*2)+1];
+    char key[k_max_msg];
+    char value[k_max_msg];
+
+    while (fgets(line, sizeof(line), file)) {
+        // Tokenize the line based on the delimiter
+        char *token = strtok(line, ",");
+        if (token != NULL) {
+            strncpy(key, token, k_max_msg - 1);
+            key[k_max_msg - 1] = '\0'; // Null-terminate the key string
+        }
+
+        token = strtok(NULL, ",");
+        if (token != NULL) {
+            strncpy(value, token, k_max_msg - 1);
+            value[k_max_msg - 1] = '\0'; // Null-terminate the value string
+        }
+
+        // Insert the key-value pair into the hash map
+        ht_insert(ht, key, value);
+    }
+
+    fclose(file);
+}
+
+int main(int argc, char *argv[]) {
+    if (argc < 2) {
+        printf("Usage: %s <file_path>\n", argv[0]);
+        return 1;
+    }
+
+    const char *filename = argv[1];
+    populate_hash_map_from_file(filename, ht);
     int fd = socket(AF_INET, SOCK_STREAM, 0);
     if (fd < 0) {
         die("socket()");

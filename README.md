@@ -19,6 +19,13 @@ This C++ project implements a server-client application facilitating data manipu
 
 2. The server initializes a hash table and listens for client requests.
 
+This project contains a file named `data/data.txt` that serves as a data source for the application.
+
+## Usage of `data.txt`
+
+The `data.txt` file contains key-value pairs in the following format:
+key,value
+
 ### Client
 1. Compile and run the client application.
     ```bash
@@ -48,4 +55,3 @@ This C++ project implements a server-client application facilitating data manipu
 - potential memory leak from not freeing hash_table instance when stopping server
 - write some test cases
 - convert to pure c implementation be swapping vector arrays with dynamic c arrays and revert malloc and calloc.
-- load file containing key value pairs
