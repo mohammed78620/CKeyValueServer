@@ -48,3 +48,4 @@ This C++ project implements a server-client application facilitating data manipu
 - potential memory leak from not freeing hash_table instance when stopping server
 - write some test cases
 - convert to pure c implementation be swapping vector arrays with dynamic c arrays and revert malloc and calloc.
+- load file containing key value pairs
