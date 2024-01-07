@@ -14,6 +14,12 @@ int HT_INITIAL_BASE_SIZE = 50;
 
 static ht_item HT_DELETED_ITEM = {NULL, NULL};
 
+int is_deleted_item(ht_item* item) {
+    if (item == &HT_DELETED_ITEM) {
+        return 1;
+    }
+    return 0;
+}
 
 
 ht_item* ht_new_item(const char* k, const char* v) {
@@ -120,7 +126,7 @@ static int ht_get_hash(
     return (hash_a + (attempt * (hash_b + 1))) % num_buckets;
 }
 
-void ht_insert(ht_hash_table* ht, const char* key, const char* value) {
+int ht_insert(ht_hash_table* ht, const char* key, const char* value) {
     const int load = ht->count * 100 / ht->size;
     if (load > 70) {
         ht_resize_up(ht);
@@ -134,7 +140,7 @@ void ht_insert(ht_hash_table* ht, const char* key, const char* value) {
             if (strcmp(cur_item->key, key) == 0) {
                 ht_del_item(cur_item);
                 ht->items[index] = item;
-                return;
+                return 0;
             }
         }
         index = ht_get_hash(item->key, ht->size, i);
@@ -143,6 +149,7 @@ void ht_insert(ht_hash_table* ht, const char* key, const char* value) {
     } 
     ht->items[index] = item;
     ht->count++;
+    return 1;
 }
 
 char* ht_search(ht_hash_table* ht, const char* key) {

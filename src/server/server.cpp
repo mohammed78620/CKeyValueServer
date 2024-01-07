@@ -44,6 +44,7 @@ static void fd_set_nb(int fd) {
 }
 
 const size_t k_max_msg = 4096;
+const char *filename;
 
 enum {
     STATE_REQ = 0,
@@ -62,6 +63,72 @@ struct Conn {
     size_t wbuf_sent = 0;
     uint8_t wbuf[4 + k_max_msg];
 };
+
+void populate_file_from_hash_table(const char *filename, ht_hash_table *ht) {
+    FILE *file = fopen(filename, "w");
+    if (file == NULL) {
+        printf("Error opening the file.\n");
+        return;
+    }
+
+    for (int i = 0; i < ht->size; ++i) {
+        ht_item* item = ht->items[i];
+        if (item != NULL && !is_deleted_item(item)) {
+            fprintf(file, "%s,%s\n", item->key, item->value);
+        }
+
+    }
+
+    fclose(file);
+}
+
+void append_key_value_to_file(const char *filename, const char *key, const char *value){
+    FILE *file = fopen(filename, "a");
+    if (file == NULL) {
+        printf("Error opening the file.\n");
+        return;
+    }
+    fprintf(file, "%s,%s\n", key, value);
+    fclose(file);
+}
+
+void populate_hash_table_from_file(const char *filename, ht_hash_table *ht) {
+    FILE *file = fopen(filename, "r");
+    if (file == NULL) {
+        printf("File doesn't exist. Creating a new file.\n");
+        file = fopen(filename, "w"); // Create the file if it doesn't exist
+        if (file == NULL) {
+            printf("Error creating the file.\n");
+            return;
+        }
+        fclose(file);
+        return;
+    }
+
+    char line[(k_max_msg*2)+1];
+    char key[k_max_msg];
+    char value[k_max_msg];
+
+    while (fgets(line, sizeof(line), file)) {
+        // Tokenize the line based on the delimiter
+        char *token = strtok(line, ",");
+        if (token != NULL) {
+            strncpy(key, token, k_max_msg - 1);
+            key[k_max_msg - 1] = '\0'; // Null-terminate the key string
+        }
+
+        token = strtok(NULL, ",");
+        if (token != NULL) {
+            strncpy(value, token, k_max_msg - 1);
+            value[k_max_msg - 1] = '\0'; // Null-terminate the value string
+        }
+
+        // Insert the key-value pair into the hash map
+        ht_insert(ht, key, value);
+    }
+
+    fclose(file);
+}
 
 static void conn_put(std::vector<Conn *> &fd2conn, struct Conn *conn) {
     if (fd2conn.size() <= (size_t)conn->fd) {
@@ -165,7 +232,13 @@ static uint32_t do_set(
 {
     (void)res;
     (void)reslen;
-    ht_insert(ht, cmd[1].c_str(), cmd[2].c_str());
+    const char *key = cmd[1].c_str();
+    const char *value = cmd[2].c_str();
+    
+    int result = ht_insert(ht, cmd[1].c_str(), cmd[2].c_str());
+    if (result) {
+        append_key_value_to_file(filename, key, value);
+    }
     return RES_OK;
 }
 
@@ -175,6 +248,7 @@ static uint32_t do_del(
     (void)res;
     (void)reslen;
     ht_delete(ht, cmd[1].c_str());
+    populate_file_from_hash_table(filename, ht);
     return RES_OK;
 }
 
@@ -340,52 +414,14 @@ static void connection_io(Conn *conn) {
     }
 }
 
-void populate_hash_map_from_file(const char *filename, ht_hash_table *ht) {
-    FILE *file = fopen(filename, "r");
-    if (file == NULL) {
-        printf("File doesn't exist. Creating a new file.\n");
-        file = fopen(filename, "w"); // Create the file if it doesn't exist
-        if (file == NULL) {
-            printf("Error creating the file.\n");
-            return;
-        }
-        fclose(file);
-        return;
-    }
-
-    char line[(k_max_msg*2)+1];
-    char key[k_max_msg];
-    char value[k_max_msg];
-
-    while (fgets(line, sizeof(line), file)) {
-        // Tokenize the line based on the delimiter
-        char *token = strtok(line, ",");
-        if (token != NULL) {
-            strncpy(key, token, k_max_msg - 1);
-            key[k_max_msg - 1] = '\0'; // Null-terminate the key string
-        }
-
-        token = strtok(NULL, ",");
-        if (token != NULL) {
-            strncpy(value, token, k_max_msg - 1);
-            value[k_max_msg - 1] = '\0'; // Null-terminate the value string
-        }
-
-        // Insert the key-value pair into the hash map
-        ht_insert(ht, key, value);
-    }
-
-    fclose(file);
-}
-
 int main(int argc, char *argv[]) {
     if (argc < 2) {
         printf("Usage: %s <file_path>\n", argv[0]);
         return 1;
     }
 
-    const char *filename = argv[1];
-    populate_hash_map_from_file(filename, ht);
+    filename = argv[1];
+    populate_hash_table_from_file(filename, ht);
     int fd = socket(AF_INET, SOCK_STREAM, 0);
     if (fd < 0) {
         die("socket()");
