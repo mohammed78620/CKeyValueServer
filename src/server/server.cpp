@@ -415,6 +415,7 @@ static void connection_io(Conn *conn) {
 }
 
 int main(int argc, char *argv[]) {
+    msg("Server starting");
     if (argc < 2) {
         printf("Usage: %s <file_path>\n", argv[0]);
         return 1;
